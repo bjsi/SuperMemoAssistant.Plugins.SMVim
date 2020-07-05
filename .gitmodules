@@ -1,0 +1,9 @@
+[submodule "SuperMemoAssistant.HtmlControlEvents"]
+	path = SuperMemoAssistant.HtmlControlEvents
+	url = https://github.com/bjsi/SuperMemoAssistant.HtmlControlEvents
+[submodule "NeovimClient"]
+	path = NeovimClient
+	url = https://github.com/bjsi/NeovimClient
+[submodule "SuperMemoAssistant.SMAUsefulFunctions"]
+	path = SuperMemoAssistant.SMAUsefulFunctions
+	url = https://github.com/bjsi/SuperMemoAssistant.SMAUsefulFunctions
