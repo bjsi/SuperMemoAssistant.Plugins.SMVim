@@ -36,6 +36,7 @@ namespace SuperMemoAssistant.Plugins.SMVim
   using System.Diagnostics.CodeAnalysis;
   using System.Runtime.Remoting;
   using Anotar.Serilog;
+  using HtmlAgilityPack;
   using HTMLControlEvents;
   using mshtml;
   using NeovimClient;
@@ -114,25 +115,45 @@ namespace SuperMemoAssistant.Plugins.SMVim
 
       var options = new List<EventInitOptions>
       {
-        new EventInitOptions(EventType.onkeydown, _ => true, x => ((IHTMLElement)x).tagName.ToLower() == "body")
+        new EventInitOptions(EventType.onkeydown, _ => true, x => ((IHTMLElement)x).tagName.ToLower() == "body"),
+
+        // TODO: Check this works
+        new EventInitOptions(EventType.onactivate, _ => true, x => ((IHTMLElement)x).tagName.ToLower() == "body")
       };
 
       HtmlDocEvents = new HTMLControlEvents(options);
 
       HtmlDocEvents.OnKeyDownEvent += HtmlDocOnKeyDownEventHandler;
+      HtmlDocEvents.OnActivateEvent += HtmlDocOnActivateEventHandler;
 
     }
 
+    private void HtmlDocOnActivateEventHandler(object sender, IHTMLControlEventArgs e)
+    {
+      nvim.SetCurrentBuffer(e.ControlIdx);
+      // TODO: Need to reset cursor position??
+    }
+
+    /// <summary>
+    /// OnKeyDown event fires before the input is sent to the IHtmlControl
+    /// This handler intercepts the event and sends the keycode to nvim.
+    /// SM does not recieve this key.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void HtmlDocOnKeyDownEventHandler(object sender, IHTMLControlEventArgs e)
     {
       
       var eventObj = e.EventObj;
+
+      // This prevents the event propagating to keypress / keyup etc.
       eventObj.returnValue = false;
 
       // TODO: This is almost certainly wrong.
       // TODO: Look into defaulCharset mshtml.
       string key = ((char)eventObj.keyCode).ToString().ToLower();
 
+      // send the input to the current nvim buffer
       nvim.SendKeys(key);
 
     }
@@ -182,7 +203,28 @@ namespace SuperMemoAssistant.Plugins.SMVim
     private void LoadBuffersWithSMContent()
     {
 
-      // var htmlDocs = ElementContent.GetAllHtmlDocuments();
+      // TODO: cross assembly type issue
+      // Dictionary<int, IHTMLDocument2> htmlDocs = ElementContent.GetAllHtmlDocuments();
+      Dictionary<int, IHTMLDocument2> htmlDocs = new Dictionary<int, IHTMLDocument2>();
+      foreach (var htmlDoc in htmlDocs)
+      {
+        nvim.SetCurrentBuffer(htmlDoc.Key);
+        nvim.SetBufferContent(GetInnerText(htmlDoc.Value?.body?.innerText));
+      }
+
+      nvim.SetCurrentBuffer(0);
+
+    }
+
+    private string GetInnerText(string html)
+    {
+
+      if (html.IsNullOrEmpty())
+        return string.Empty;
+
+      var doc = new HtmlDocument();
+      doc.LoadHtml(html);
+      return doc.DocumentNode.InnerText;
 
     }
 

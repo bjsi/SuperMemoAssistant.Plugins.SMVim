@@ -46,6 +46,12 @@ namespace SuperMemoAssistant.Plugins.SMVim
 
     }
 
+    // TODO:
+    public static void SetCurrentBuffer(this NeovimClient<NeovimHost> nvim, long bufId)
+    {
+
+    }
+
     public static void DetachFromUI(this NeovimClient<NeovimHost> nvim)
     {
       nvim.Action("nvim_ui_detach");
@@ -56,9 +62,11 @@ namespace SuperMemoAssistant.Plugins.SMVim
       nvim.Action<long, long, long, bool, string[]>("nvim_buf_set_lines", 0, 0, -1, true, new string[] { "" });
     }
 
-    public static void SetBufferContent(this NeovimClient<NeovimHost> nvim, string[] content)
+    public static void SetBufferContent(this NeovimClient<NeovimHost> nvim, string content)
     {
-      nvim.Action<long, long, long, bool, string[]>("nvim_buf_set_lines", 0, 0, 0, false, content);
+      // TODO: Test
+      string[] split = content.Split('\n');
+      nvim.Action<long, long, long, bool, string[]>("nvim_buf_set_lines", 0, 0, 0, false, split);
     }
 
   }
